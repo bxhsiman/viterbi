@@ -118,6 +118,22 @@ module VD();
 
    VITERBIDECODER vd (Reset, CLOCK, Active, Code, DecodeOut);
 
+   initial begin
+      $dumpfile("vd.vcd");
+      $dumpvars(0, VD);
+      $display("=== Viterbi Decoder Test ===");
+      
+      // 等待一段时间以观察波形
+      #1000;
+      
+      // 检查输出
+      if (DecodeOut !== 1'b1) begin
+          $display("✗ FAIL: 解码输出错误，期望=1, 实际=%b", DecodeOut);
+      end else begin
+          $display("✓ PASS: 解码输出正确");
+      end
+   end
+
 endmodule
 
 
