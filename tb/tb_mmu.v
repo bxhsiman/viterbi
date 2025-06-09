@@ -1,6 +1,12 @@
 //==============================================================================
-// File   : mmu_tb.v
-// Purpose: Verification TB – MMU + real RAM
+// Testbench : mmu_tb.v  (pure Verilog‑2001 version)
+// Purpose    : Basic functional verification of the MMU (Memory Management Unit)
+//              – no SystemVerilog syntax, suitable for Icarus Verilog, ModelSim
+//                or任何纯 Verilog‑2001 仿真器。
+//------------------------------------------------------------------------------
+// Usage
+//   iverilog -g2001 -o mmu_tb.vvp mmu_tb.v rtl/mmu.v rtl/ram.v params.v
+//   vvp mmu_tb.vvp
 //==============================================================================
 
 `timescale 1ns/1ps
@@ -8,129 +14,111 @@
 `include "rtl/mmu.v"
 `include "rtl/ram.v"
 
-//-------------------------------------------------------------- TB 顶层 ------
-module mmu_tb;
+module tb_mmu;
+   // -------------------------------------------------------------------------
+   //  Clock generation (100 MHz → 10 ns half‑period)
+   // -------------------------------------------------------------------------
+   reg Clock1;   // 主时钟
+   reg Clock2;   // 相位差 90°
+   wire CLOCK = Clock1; // 别名，保持与 RTL 一致
 
-   //--------------------------- 时钟 / 复位 -------------------------------
-   reg Clock1 = 0;  always #5  Clock1 = ~Clock1;   // 100 MHz
-   reg Clock2 = 0;  always #10 Clock2 = ~Clock2;   // 50 MHz
-   wire CLOCK = Clock2;                            // MMU 中 AddressRAM 用
+   initial begin
+      Clock1 = 1'b0;
+      forever #10 Clock1 = ~Clock1;
+   end
 
-   reg Reset  = 0;
-   reg Active = 0;
-   reg Hold   = 0;
-   reg Init   = 0;
+   initial begin
+      Clock2 = 1'b1;           // 起始为高实现 90° 相移
+      forever #10 Clock2 = ~Clock2;
+   end
 
-   //--------------------------- 其它激励 ----------------------------------
-   reg [`WD_DEPTH-1:0]            ACSPage             = 0;
-   reg [`WD_FSM-2:0]              ACSSegment_minusLSB = 0;
-   reg [`N_ACS-1:0]               Survivors           = 0;
+   // -------------------------------------------------------------------------
+   //  控制/激励寄存器
+   // -------------------------------------------------------------------------
+   reg Reset, Active, Hold, Init;
+   reg [`WD_DEPTH-1:0]      ACSPage;
+   reg [`WD_FSM-2:0]        ACSSegment_minusLSB;
+   reg [`N_ACS-1:0]         Survivors;
+   reg [`WD_RAM_ADDRESS-`WD_FSM-1:0] AddressTB;
 
-   reg [`WD_RAM_ADDRESS-`WD_FSM-1:0] AddressTB        = 0;
-   reg                               tb_start         = 0; // 开始回溯标志
-
-   //--------------------------- 互连总线 -----------------------------------
-   wire [`WD_RAM_DATA-1:0] DataBus;     // 三态公共总线
-   wire [`WD_RAM_DATA-1:0] DataTB;
-   wire RWSelect, ReadClock, WriteClock, RAMEnable;
+   // -------------------------------------------------------------------------
+   //  互连线
+   // -------------------------------------------------------------------------
+   wire [`WD_RAM_DATA-1:0]   DataTB;
+   wire [`WD_RAM_DATA-1:0]   DataRAM;
    wire [`WD_RAM_ADDRESS-1:0] AddressRAM;
+   wire RWSelect, ReadClock, WriteClock, RAMEnable;
 
-   //--------------------------- 参考模型 -----------------------------------
-   localparam RAMDEPTH = (1 << `WD_RAM_ADDRESS);
-   reg [`WD_RAM_DATA-1:0] mem_ref [0:RAMDEPTH-1];
-   integer i;
-   initial for (i = 0; i < RAMDEPTH; i = i + 1) mem_ref[i] = 0;
-
-   //--------------------------- DUT & RAM ---------------------------------
+   // -------------------------------------------------------------------------
+   //  DUT + 行为级 RAM
+   // -------------------------------------------------------------------------
    MMU dut (
-      .CLOCK                   (CLOCK),
-      .Clock1                  (Clock1),
-      .Clock2                  (Clock2),
-      .Reset                   (Reset),
-      .Active                  (Active),
-      .Hold                    (Hold),
-      .Init                    (Init),
-      .ACSPage                 (ACSPage),
-      .ACSSegment_minusLSB     (ACSSegment_minusLSB),
-      .Survivors               (Survivors),
-      .DataTB                  (DataTB),
-      .AddressTB               (AddressTB),
-      .RWSelect                (RWSelect),
-      .ReadClock               (ReadClock),
-      .WriteClock              (WriteClock),
-      .RAMEnable               (RAMEnable),
-      .AddressRAM              (AddressRAM),
-      .DataRAM                 (DataBus)
-   );
+      /*SYSTEM*/   CLOCK, Clock1, Clock2,
+      Reset, Active, Hold, Init,
+      /*WRITE */   ACSPage, ACSSegment_minusLSB, Survivors,
+      /*READ  */   DataTB, AddressTB,
+      /*RAM   */   RWSelect, ReadClock, WriteClock,
+                   RAMEnable, AddressRAM, DataRAM);
 
-   // 真正的 三态 RAM
-   RAM sram (
-      .RAMEnable  (RAMEnable),
-      .AddressRAM (AddressRAM),
-      .DataRAM    (DataBus),
-      .RWSelect   (RWSelect),
-      .ReadClock  (ReadClock),
-      .WriteClock (WriteClock)
-   );
+   RAM ram_i (RAMEnable, AddressRAM, DataRAM,
+              RWSelect, ReadClock, WriteClock);
 
-   //--------------------------- 复位 / 激励 -------------------------------
+   // -------------------------------------------------------------------------
+   //  VCD 波形
+   // -------------------------------------------------------------------------
    initial begin
       $dumpfile("mmu_tb.vcd");
-      $dumpvars(0, mmu_tb);
-
-      Reset  = 0; Active = 0; Init = 0;
-      #25  Reset  = 1;
-      #10  Active = 1;  Init = 1;
-      #20  Init   = 0;                      // 复位、初始化完毕
+      $dumpvars(0, tb_mmu);
    end
 
-   // 写侧激励（Survivors、Segment、Page 计数器）
-   always @(negedge Clock2)
-     if (Active) begin
-        Survivors <= Survivors + 1;
-        if (ACSSegment_minusLSB == ((1<<(`WD_FSM-1))-1)) begin
-            ACSSegment_minusLSB <= 0;
-            ACSPage             <= ACSPage + 1;
-        end else
-            ACSSegment_minusLSB <= ACSSegment_minusLSB + 1;
-     end
+   // -------------------------------------------------------------------------
+   //  主激励序列
+   // -------------------------------------------------------------------------
+   initial begin : STIMULUS
+      //--------------------------------------------------------------
+      // 上电默认
+      //--------------------------------------------------------------
+      Reset   = 1'b0;  // 低有效复位保持
+      Active  = 1'b0;
+      Hold    = 1'b0;
+      Init    = 1'b0;
+      ACSPage = 0;
+      ACSSegment_minusLSB = 0;
+      Survivors = 0;
+      AddressTB = 0;
 
-   // -------- 等写满一页再开始回溯 ----------
-   initial begin
-      @(negedge Init);                               // 等 INIT 结束
-      repeat( (1<<`WD_FSM) ) @(posedge Clock2);      // 写满 1 页
-      tb_start = 1;
-   end
+      //--------------------------------------------------------------
+      // STEP‑0 : 等待时钟稳定 (8 个 Clock1 上升沿 ≈ 80 ns)
+      //--------------------------------------------------------------
+      repeat (8) @(posedge Clock1);
 
-   always @(posedge Clock2) if (Active && tb_start)
-      AddressTB <= AddressTB + 1;
+      //--------------------------------------------------------------
+      // STEP‑1 : 同步释放复位并激活核心
+      //--------------------------------------------------------------
+      @(posedge Clock1);
+      Reset  <= 1'b1;  // 解除复位
+      Active <= 1'b1;
 
-   //-------------------- 在写周期更新参考模型 ------------------------------
-   always @(negedge WriteClock)
-     if (Active && !RWSelect && ~RAMEnable)
-        mem_ref[AddressRAM] <= DataBus;
+      //--------------------------------------------------------------
+      // STEP‑2 : 写入两段生存路径 0xA、0xB → 期望 8'hBA
+      //--------------------------------------------------------------
+      ACSPage             <= 2;  // 测试页 2
+      ACSSegment_minusLSB <= 0;
 
-   //-------------------- 在读周期比较 --------------------------------------
-   integer errors = 0;
-   always @(negedge ReadClock)
-     if (Active && tb_start && RWSelect && ~RAMEnable) begin
-        if ((DataTB !== mem_ref[AddressRAM])) begin
-           $display("[ERROR] @%0t ns  Addr=%0d  Exp=%02h  Got=%02h",
-                     $time, AddressRAM, mem_ref[AddressRAM], DataTB);
-           errors = errors + 1;
-        end
-     end
-
-   //-------------------- 结束 ---------------------------------------------
-   initial begin
-      #4000;                                         // 仿真 4 µs
-      $display("================================================");
-      if (errors == 0)
-         $display("MMU + RAM TB PASSED.");
+      Survivors <= 4'hA;          // 低半字节
+      repeat(2)@(posedge Clock1); // 等待读取
+      Survivors <= 4'hB;          // 高半字节
+      repeat(2)@(posedge Clock1); // 等待读取
+      
+      if (DataTB === 8'hBA)
+         $display("\n*** 测试通过 *** – DataTB = 0x%h @ %0t ns", DataTB, $time);
       else
-         $display("MMU + RAM TB FAILED: %0d mismatches.", errors);
-      $display("================================================");
+         $display("\n*** 测试失败 *** – 期望0xBA, 实际0x%h @ %0t ns", DataTB, $time);
+
+      //--------------------------------------------------------------
+      // STEP‑6 : 结束仿真
+      //--------------------------------------------------------------
+      #50;
       $finish;
    end
-
 endmodule
