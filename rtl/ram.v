@@ -85,6 +85,7 @@ reg [DATABITS-1:0] DataBuff;               // 读数据缓冲器
    always @(negedge WClock)
    begin
       if (~_Enable) Data_Regs [Address] <= Data;
+      // $display("RAM: Write Address=%d, Data=%h RWSelect %d", Address, Data, RWSelect);
    end
 
    // 读操作逻辑  
@@ -92,6 +93,7 @@ reg [DATABITS-1:0] DataBuff;               // 读数据缓冲器
    always @(negedge RClock)
    begin
       if (~_Enable) DataBuff <= Data_Regs [Address];
+      // $display("RAM:READ Address=%d, Data=%h RWSelect %d", Address, DataBuff, RWSelect);
    end
 
    // 三态数据总线控制
