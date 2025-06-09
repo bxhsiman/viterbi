@@ -1,6 +1,6 @@
 `timescale 1ns/1ps
 `include "params.v"          // 必须已包含 WD_* 和 N_ACS 等宏
-`include "rtl/acsunit.v"     // 包含ACSUNIT模块定义
+`include "rtl/acs.v"     // 包含ACSUNIT模块定义
 // 若还没写，可临时加：
 // `define WD_DIST 2
 // `define WD_METR 8
@@ -81,15 +81,15 @@ module tb_ACSUNIT;
     /* 8 个分支度量（2 bit × 8）*/
     // {D7,D6,D5,D4,D3,D2,D1,D0}
     Distance = {
-      2'd0, 2'd2, 2'd3, 2'd1,   // 高 4 个
-      2'd0, 2'd3, 2'd2, 2'd1    // 低 4 个
+      2'd3, 2'd2, 2'd3, 2'd1,   // 高 4 个
+      2'd3, 2'd1, 2'd2, 2'd1    // 低 4 个
     };
 
     /* 8 个路径度量（8 bit × 8）*/
     // {P7,P6,P5,P4,P3,P2,P1,P0}
     MMPathMetric = {
       8'd35, 8'd40, 8'd25, 8'd30,
-      8'd20, 8'd18, 8'd15, 8'd10
+      8'd20, 8'd1, 8'd15, 8'd10
     };
 
     /* ---- Init 保持 1 个 Clock2 的负沿 ---- */

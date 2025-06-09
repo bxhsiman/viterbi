@@ -1,182 +1,63 @@
-//==============================================================================
-// ÎÄ¼şÃû: tb_bmg.v
-// ÃèÊö: BMG (·ÖÖ§¶ÈÁ¿Éú³ÉÆ÷) µÄ²âÊÔÆ½Ì¨
-// ¹¦ÄÜ: ÑéÖ¤BMGÄ£¿éµÄ»ù±¾¹¦ÄÜ£¬°üÀ¨£º
-//       1. ±àÂë·ûºÅËø´æ¹¦ÄÜ
-//       2. ·ÖÖ§¶ÈÁ¿¼ÆËã¹¦ÄÜ
-//       3. Êä³ö²¨ĞÎÉú³É
-//==============================================================================
-
-`include "params.v"
-`include "rtl/bmg.v"
 `timescale 1ns/1ps
+`include "params.v"
+`include "rtl/bmg.v" 
 
-module tb_bmg();
+module tb_BMG;
 
-//==============================================================================
-// ĞÅºÅ¶¨Òå
-//==============================================================================
-// Ê±ÖÓºÍ¸´Î»ĞÅºÅ
-reg Reset;
-reg Clock2;
+  /*---------- 1. ç«¯å£ ----------*/
+  reg  Clock2, Reset;
+  reg  [`WD_FSM-1:0]   ACSSegment;
+  reg  [`WD_CODE-1:0]  Code;
 
-// BMGÊäÈëĞÅºÅ
-reg [`WD_FSM-1:0] ACSSegment;    // FSM¶ÎµØÖ· (6Î»)
-reg [`WD_CODE-1:0] Code;         // ±àÂë·ûºÅ (2Î»)
+  wire [`WD_DIST*2*`N_ACS-1:0] Distance;
 
-// BMGÊä³öĞÅºÅ
-wire [`WD_DIST*2*`N_ACS-1:0] Distance; // 8¸ö·ÖÖ§¶ÈÁ¿ (16Î»)
+  /*---------- 2. å®ä¾‹ ----------*/
+  BMG dut (
+    .Reset      (Reset),
+    .Clock2     (Clock2),
+    .ACSSegment (ACSSegment),
+    .Code       (Code),
+    .Distance   (Distance)
+  );
 
-// ²âÊÔ¼ÆÊıÆ÷
-integer i;
+  /*---------- 3. æ—¶é’Ÿ ----------*/
+  initial begin
+    Clock2 = 0;
+    forever #5 Clock2 = ~Clock2;     // 100 MHz
+  end
 
-//==============================================================================
-// ±»²âÄ£¿éÊµÀı»¯
-//==============================================================================
-BMG DUT (
-    .Reset(Reset),
-    .Clock2(Clock2),
-    .ACSSegment(ACSSegment),
-    .Code(Code),
-    .Distance(Distance)
-);
+  /*---------- 4. æ³¢å½¢ ----------*/
+  initial begin
+    $dumpfile("bmg_tb.vcd");
+    $dumpvars(0, tb_BMG);
+  end
 
-//==============================================================================
-// Ê±ÖÓÉú³É
-//==============================================================================
-initial begin
-    Clock2 = 1'b0;
-    forever #(`HALF) Clock2 = ~Clock2;  // Ê±ÖÓÖÜÆÚÎª200ns
-end
+  /*---------- 5. æ¿€åŠ± ----------*/
+  initial begin
+    /* ä¸Šç”µå¤ä½ */
+    Reset = 0;  ACSSegment = 0; Code = 0;
+    #15 Reset = 1;                          // 15 ns è§£é™¤å¤ä½
 
-//==============================================================================
-// ²âÊÔĞòÁĞ
-//==============================================================================
-initial begin
-    // ³õÊ¼»¯ĞÅºÅ
-    Reset = 1'b0;
-    ACSSegment = 6'h00;
-    Code = 2'b00;
-    
-    // µÈ´ı¼¸¸öÊ±ÖÓÖÜÆÚ
-    #(`FULL * 2);
-    
-    // ÊÍ·Å¸´Î»
-    Reset = 1'b1;
-    #(`FULL);
-    
-    $display("=== BMGÄ£¿é²âÊÔ¿ªÊ¼ ===");
-    $display("Ê±¼ä\t\tReset\tACSSegment\tCode\tDistance");
-    $display("------------------------------------------------------------");
-    
-    // ²âÊÔ1: ÑéÖ¤²»Í¬ACSSegmentÏÂµÄ»ù±¾¹¦ÄÜ
-    $display("\n--- ²âÊÔ1: »ù±¾·ÖÖ§¶ÈÁ¿¼ÆËã ---");
-    
-    // ÉèÖÃ±àÂë·ûºÅÎª00£¬ÔÚACSSegment=0x3FÊ±Ëø´æ
-    Code = 2'b00;
-    ACSSegment = 6'h3F;
-    #(`FULL);
-    $display("%0t\t%b\t%h\t\t%b\t%h", $time, Reset, ACSSegment, Code, Distance);
-    
-    // ¸Ä±äACSSegment£¬¹Û²ì¾àÀë¼ÆËã
-    for (i = 0; i < 8; i = i + 1) begin
-        ACSSegment = i;
-        #(`FULL);
-        $display("%0t\t%b\t%h\t\t%b\t%h", $time, Reset, ACSSegment, Code, Distance);
+    /* ç¬¬ 1 ä¸ªæ—¶éš™ï¼šæŠŠ Code=00 å†™å…¥ CodeRegister */
+    ACSSegment = 6'h3F;   // 63 â€”> è§¦å‘å¯„å­˜å™¨é”å­˜
+    Code       = 2'b00;
+    #10;                  // ç­‰å¾…å½“å‰ Clock2 ä¸Šå‡æ²¿
+
+    /* ç¬¬ 2 ä¸ªæ—¶éš™ï¼šåˆ‡å›æ®µ 0ï¼Œè¯»å–è·ç¦» */
+    ACSSegment = 6'd0;    // BranchID = 000000xxx
+    Code       = 2'b11;   // éšæ„ï¼Œä¸å½±å“æ­¤æ¬¡è®¡ç®—
+    #1;                   // ç»™ç»„åˆè·¯å¾„æ—¶é—´æ”¶æ•›
+
+    /* æ£€æŸ¥ç»“æœ */
+    if (Distance === 16'h5258)
+      $display("*** BMG å•å…ƒæµ‹è¯• PASS âœ”  Distance = 0x%h ***", Distance);
+    else begin
+      $display("*** BMG å•å…ƒæµ‹è¯• FAIL âœ˜  Distance = 0x%h (æœŸæœ› 0x5258) ***",
+                Distance);
+      $stop;
     end
-    
-    // ²âÊÔ2: ÑéÖ¤±àÂë·ûºÅËø´æ¹¦ÄÜ
-    $display("\n--- ²âÊÔ2: ±àÂë·ûºÅËø´æ¹¦ÄÜ ---");
-    
-    // ²âÊÔ²»Í¬µÄ±àÂë·ûºÅ
-    Code = 2'b01;
-    ACSSegment = 6'h3F;  // ÔÚÕâ¸öÖµÊ±²Å»áËø´æĞÂ·ûºÅ
-    #(`FULL);
-    $display("%0t\t%b\t%h\t\t%b\t%h", $time, Reset, ACSSegment, Code, Distance);
-    
-    // ¸Ä±äACSSegment£¬ÑéÖ¤·ûºÅÒÑ±»Ëø´æ
-    ACSSegment = 6'h00;
-    #(`FULL);
-    $display("%0t\t%b\t%h\t\t%b\t%h", $time, Reset, ACSSegment, Code, Distance);
-    
-    // ¸Ä±äCodeµ«²»ÔÚ0x3F´¦£¬Ó¦¸Ã²»»áÓ°ÏìÊä³ö
-    Code = 2'b11;
-    #(`FULL);
-    $display("%0t\t%b\t%h\t\t%b\t%h", $time, Reset, ACSSegment, Code, Distance);
-    
-    // ²âÊÔ3: ÑéÖ¤²»Í¬±àÂë·ûºÅµÄ¶ÈÁ¿¼ÆËã
-    $display("\n--- ²âÊÔ3: ²»Í¬±àÂë·ûºÅµÄ¶ÈÁ¿¼ÆËã ---");
-    
-    // ²âÊÔ±àÂë·ûºÅ 10
-    Code = 2'b10;
-    ACSSegment = 6'h3F;
-    #(`FULL);
-    $display("%0t\t%b\t%h\t\t%b\t%h", $time, Reset, ACSSegment, Code, Distance);
-    
-    ACSSegment = 6'h00;
-    #(`FULL);
-    $display("%0t\t%b\t%h\t\t%b\t%h", $time, Reset, ACSSegment, Code, Distance);
-    
-    // ²âÊÔ±àÂë·ûºÅ 11
-    Code = 2'b11;
-    ACSSegment = 6'h3F;
-    #(`FULL);
-    $display("%0t\t%b\t%h\t\t%b\t%h", $time, Reset, ACSSegment, Code, Distance);
-    
-    ACSSegment = 6'h00;
-    #(`FULL);
-    $display("%0t\t%b\t%h\t\t%b\t%h", $time, Reset, ACSSegment, Code, Distance);
-    
-    // ²âÊÔ4: ÑéÖ¤¸´Î»¹¦ÄÜ
-    $display("\n--- ²âÊÔ4: ¸´Î»¹¦ÄÜÑéÖ¤ ---");
-    
-    Reset = 1'b0;
-    #(`FULL);
-    $display("%0t\t%b\t%h\t\t%b\t%h", $time, Reset, ACSSegment, Code, Distance);
-    
-    Reset = 1'b1;
-    #(`FULL);
-    $display("%0t\t%b\t%h\t\t%b\t%h", $time, Reset, ACSSegment, Code, Distance);
-    
-    // ²âÊÔ5: ÍêÕûµÄACSSegmentĞòÁĞ²âÊÔ
-    $display("\n--- ²âÊÔ5: ÍêÕûACSSegmentĞòÁĞ²âÊÔ ---");
-    
-    Code = 2'b01;
-    ACSSegment = 6'h3F;  // ÏÈËø´æ·ûºÅ
-    #(`FULL);
-    
-    // ±éÀúËùÓĞ¿ÉÄÜµÄACSSegmentÖµ
-    for (i = 0; i < 64; i = i + 8) begin
-        ACSSegment = i;
-        #(`FULL);
-        $display("%0t\t%b\t%h\t\t%b\t%h", $time, Reset, ACSSegment, Code, Distance);
-    end
-    
-    $display("\n=== BMGÄ£¿é²âÊÔÍê³É ===");
-    
-    // ¶îÍâÔËĞĞÒ»Ğ©Ê±ÖÓÖÜÆÚÒÔ¹Û²ì²¨ĞÎ
-    #(`FULL * 10);
-    
-    $finish;
-end
 
-//==============================================================================
-// ²¨ĞÎÊä³ö
-//==============================================================================
-initial begin
-    $dumpfile("tb_bmg.vcd");           // VCDÎÄ¼şÃû
-    $dumpvars(0, tb_bmg);              // ×ª´¢ËùÓĞ²ã´ÎµÄ±äÁ¿
-    
-    // Ò²¿ÉÒÔÑ¡ÔñĞÔµØ×ª´¢ÌØ¶¨ĞÅºÅ
-    // $dumpvars(1, Reset, Clock2, ACSSegment, Code, Distance);
-end
-
-//==============================================================================
-// ¼à¿ØÆ÷ - ÊµÊ±ÏÔÊ¾¹Ø¼üĞÅºÅ±ä»¯
-//==============================================================================
-initial begin
-    $monitor("Ê±¼ä=%0t: Reset=%b, Clock2=%b, ACSSegment=%h, Code=%b, Distance=%h", 
-             $time, Reset, Clock2, ACSSegment, Code, Distance);
-end
+    #10 $finish;
+  end
 
 endmodule
