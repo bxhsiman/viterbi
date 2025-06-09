@@ -1,7 +1,5 @@
 `timescale 1ns/1ps
-`include "params.v"          // 确保已定义 WD_DIST=2, WD_METR=8 等宏
-`include "rtl/acs.v"            // 包含ACS模块定义
-
+`include "../params.v"          // 确保已定义 WD_DIST=2, WD_METR=8 等宏
 // 若暂时没有 params.v，也可以手动写：
 // `define WD_DIST 2
 // `define WD_METR 8

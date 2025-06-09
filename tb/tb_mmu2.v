@@ -1,6 +1,5 @@
 `timescale 1ns/1ps
-`include "params.v"          // 确保已定义 N_ACS, WD_RAM_DATA 等宏
-`include "rtl/mmu.v"  // 包含 ACSSURVIVORBUFFER 模块定义
+`include "../params.v"          // 确保已定义 N_ACS, WD_RAM_DATA 等宏
 
 
 module buff_tb;

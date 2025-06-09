@@ -25,7 +25,7 @@
 // - 地址空间: 由页面地址和段地址组合而成
 //==============================================================================
 
-`include "params.v"
+`include "../params.v"
 
 //==============================================================================
 // 模块名: MMU
@@ -56,7 +56,7 @@ input [`WD_DEPTH-1:0] ACSPage;              // 当前ACS页面
 input [`WD_FSM-2:0] ACSSegment_minusLSB;    // ACS段地址(去掉LSB)
 
 // 来自ACS单元的连接
-input [`N_ACS-1:0] Survivors;               // 4位生存路径数据
+input [`N_ACS-1:0] Survivors;               // 8位生存路径数据
 
 // 与TBU单元的连接
 output [`WD_RAM_DATA-1:0] DataTB;           // 向TBU提供的数据

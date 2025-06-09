@@ -34,13 +34,6 @@
 //==============================================================================
 
 `include "params.v"
-`include "rtl/acs.v"
-`include "rtl/bmg.v"
-`include "rtl/control.v"
-`include "rtl/mmu.v"
-`include "rtl/tbu.v"
-`include "rtl/dff.v"
-`include "rtl/ram.v"
 
 //==============================================================================
 // 模块名: VITERBIDECODER

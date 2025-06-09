@@ -1,6 +1,5 @@
 `timescale 1ns/1ps
-`include "params.v"          // 必须已包含 WD_* 和 N_ACS 等宏
-`include "rtl/acs.v"     // 包含ACSUNIT模块定义
+`include "../params.v"          // 必须已包含 WD_* 和 N_ACS 等宏
 // 若还没写，可临时加：
 // `define WD_DIST 2
 // `define WD_METR 8

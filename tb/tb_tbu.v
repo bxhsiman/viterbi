@@ -1,7 +1,6 @@
 //========================== tb_TBU_min.v ==========================
 `timescale 1ns/1ps
-`include "params.v"
-`include "rtl/tbu.v"
+`include "../params.v"
 
 // 若没有 params.v，可取消注释：
 // `define WD_STATE 8

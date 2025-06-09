@@ -1,6 +1,5 @@
 `timescale 1ns/1ps
-`include "params.v"
-`include "rtl/control.v"
+`include "../params.v"
 
 module tb_CONTROL;
 

@@ -1,7 +1,6 @@
 //============================ tb_RAM_separate_clk.v ===========================
 `timescale 1ns/1ps
-`include "params.v"
-`include "rtl/ram.v"
+`include "../params.v"
 
 module tb_RAM;
 

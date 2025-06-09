@@ -1,0 +1,78 @@
+|viterbi_encode9
+X => ShReg[8].IN1
+Y[0] <= pDFF:dffy0.port1
+Y[1] <= pDFF:dffy1.port1
+Clock => Clock.IN10
+Reset => Reset.IN10
+
+
+|viterbi_encode9|pDFF:dff7
+DATA[0] => QOUT[0]~reg0.DATAIN
+QOUT[0] <= QOUT[0]~reg0.DB_MAX_OUTPUT_PORT_TYPE
+CLOCK => QOUT[0]~reg0.CLK
+RESET => QOUT[0]~reg0.ACLR
+
+
+|viterbi_encode9|pDFF:dff6
+DATA[0] => QOUT[0]~reg0.DATAIN
+QOUT[0] <= QOUT[0]~reg0.DB_MAX_OUTPUT_PORT_TYPE
+CLOCK => QOUT[0]~reg0.CLK
+RESET => QOUT[0]~reg0.ACLR
+
+
+|viterbi_encode9|pDFF:dff5
+DATA[0] => QOUT[0]~reg0.DATAIN
+QOUT[0] <= QOUT[0]~reg0.DB_MAX_OUTPUT_PORT_TYPE
+CLOCK => QOUT[0]~reg0.CLK
+RESET => QOUT[0]~reg0.ACLR
+
+
+|viterbi_encode9|pDFF:dff4
+DATA[0] => QOUT[0]~reg0.DATAIN
+QOUT[0] <= QOUT[0]~reg0.DB_MAX_OUTPUT_PORT_TYPE
+CLOCK => QOUT[0]~reg0.CLK
+RESET => QOUT[0]~reg0.ACLR
+
+
+|viterbi_encode9|pDFF:dff3
+DATA[0] => QOUT[0]~reg0.DATAIN
+QOUT[0] <= QOUT[0]~reg0.DB_MAX_OUTPUT_PORT_TYPE
+CLOCK => QOUT[0]~reg0.CLK
+RESET => QOUT[0]~reg0.ACLR
+
+
+|viterbi_encode9|pDFF:dff2
+DATA[0] => QOUT[0]~reg0.DATAIN
+QOUT[0] <= QOUT[0]~reg0.DB_MAX_OUTPUT_PORT_TYPE
+CLOCK => QOUT[0]~reg0.CLK
+RESET => QOUT[0]~reg0.ACLR
+
+
+|viterbi_encode9|pDFF:dff1
+DATA[0] => QOUT[0]~reg0.DATAIN
+QOUT[0] <= QOUT[0]~reg0.DB_MAX_OUTPUT_PORT_TYPE
+CLOCK => QOUT[0]~reg0.CLK
+RESET => QOUT[0]~reg0.ACLR
+
+
+|viterbi_encode9|pDFF:dff0
+DATA[0] => QOUT[0]~reg0.DATAIN
+QOUT[0] <= QOUT[0]~reg0.DB_MAX_OUTPUT_PORT_TYPE
+CLOCK => QOUT[0]~reg0.CLK
+RESET => QOUT[0]~reg0.ACLR
+
+
+|viterbi_encode9|pDFF:dffy1
+DATA[0] => QOUT[0]~reg0.DATAIN
+QOUT[0] <= QOUT[0]~reg0.DB_MAX_OUTPUT_PORT_TYPE
+CLOCK => QOUT[0]~reg0.CLK
+RESET => QOUT[0]~reg0.ACLR
+
+
+|viterbi_encode9|pDFF:dffy0
+DATA[0] => QOUT[0]~reg0.DATAIN
+QOUT[0] <= QOUT[0]~reg0.DB_MAX_OUTPUT_PORT_TYPE
+CLOCK => QOUT[0]~reg0.CLK
+RESET => QOUT[0]~reg0.ACLR
+
+

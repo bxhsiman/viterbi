@@ -1,7 +1,6 @@
 //================ tb_METRICMEMORY_syncclk_fix.v =====================
 `timescale 1ns/1ps
-`include "params.v"
-`include "rtl/ram.v"
+`include "../params.v"
 
 module tb_METRICMEMORY;
 

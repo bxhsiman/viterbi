@@ -1,6 +1,4 @@
 `include "params.v"	
-`include "decoder.v"
-`include "viterbi_encode9.v"
 
 module VD();
 
